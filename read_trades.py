@@ -1,5 +1,4 @@
-from flask import Flask, jsonify, send_file
-import os
+from flask import Flask, render_template_string
 
 app = Flask(__name__)
 
@@ -10,13 +9,12 @@ def read_trades(file_path):
     with open(file_path, 'r', encoding='utf-8') as file:
         content = file.read()
     
-    # Split the content by the separator and clean up entries
     trades = [trade.strip() for trade in content.split("-------------------------------------------------------------") if trade.strip()]
     return trades
 
-def generate_full_html(trades, output_file):
+def generate_full_html(trades):
     """
-    Generates a complete HTML file with inline CSS and JavaScript for a trade slider.
+    Generates a complete HTML with inline CSS and JavaScript for a trade slider.
     """
     html_content = f'''
     <!DOCTYPE html>
@@ -171,6 +169,14 @@ def generate_full_html(trades, output_file):
                 currentIndex = (currentIndex - 1 + slides.length) % slides.length;
                 showSlide(currentIndex);
             }
+            
+            function checkAutoSlide() {
+                const currentSlide = slides[currentIndex];
+                const slideText = currentSlide.textContent || currentSlide.innerText;
+                if (slideText.includes("TRADE END")) {
+                    nextSlide();
+                }
+            }
 
             indexInput.addEventListener('change', (e) => {
                 const value = parseInt(e.target.value) - 1; // Adjusting for 0-based index
@@ -185,6 +191,9 @@ def generate_full_html(trades, output_file):
             // Initial display
             showSlide(currentIndex);
             
+            // Auto-slide check every 2 seconds
+            setInterval(checkAutoSlide, 2000);
+            
             // Button controls
             document.querySelector('.prev').addEventListener('click', prevSlide);
             document.querySelector('.next').addEventListener('click', nextSlide);
@@ -193,17 +202,13 @@ def generate_full_html(trades, output_file):
     </html>
     '''
 
-    # Write the complete HTML to the output file
-    with open(output_file, 'w', encoding='utf-8') as file:
-        file.write(html_content)
+    return html_content
 
-# Flask route to serve the HTML
 @app.route('/')
-def serve_html():
-    trades = read_trades('MiindBlowing.txt')  # Update with your file path
-    generate_full_html(trades, 'trades.html')
-    return send_file('trades.html')
+def index():
+    trades = read_trades('MiindBlowing.txt')  # Ensure this file is in the root folder
+    html_content = generate_full_html(trades)
+    return render_template_string(html_content)
 
-# Run the Flask application
 if __name__ == "__main__":
     app.run(debug=True)
