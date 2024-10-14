@@ -1,3 +1,8 @@
+from flask import Flask, jsonify, send_file
+import os
+
+app = Flask(__name__)
+
 def read_trades(file_path):
     """
     Reads trades from a text file and splits them by a separator line.
@@ -166,14 +171,6 @@ def generate_full_html(trades, output_file):
                 currentIndex = (currentIndex - 1 + slides.length) % slides.length;
                 showSlide(currentIndex);
             }
-            
-            function checkAutoSlide() {
-                const currentSlide = slides[currentIndex];
-                const slideText = currentSlide.textContent || currentSlide.innerText;
-                if (slideText.includes("TRADE END")) {
-                    nextSlide();
-                }
-            }
 
             indexInput.addEventListener('change', (e) => {
                 const value = parseInt(e.target.value) - 1; // Adjusting for 0-based index
@@ -188,9 +185,6 @@ def generate_full_html(trades, output_file):
             // Initial display
             showSlide(currentIndex);
             
-            // Auto-slide check every 2 seconds
-            setInterval(checkAutoSlide, 2000);
-            
             // Button controls
             document.querySelector('.prev').addEventListener('click', prevSlide);
             document.querySelector('.next').addEventListener('click', nextSlide);
@@ -203,7 +197,13 @@ def generate_full_html(trades, output_file):
     with open(output_file, 'w', encoding='utf-8') as file:
         file.write(html_content)
 
-# Usage
-if __name__ == "__main__":
+# Flask route to serve the HTML
+@app.route('/')
+def serve_html():
     trades = read_trades('MiindBlowing.txt')  # Update with your file path
     generate_full_html(trades, 'trades.html')
+    return send_file('trades.html')
+
+# Run the Flask application
+if __name__ == "__main__":
+    app.run(debug=True)
