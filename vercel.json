@@ -2,14 +2,14 @@
   "version": 2,
   "builds": [
     {
-      "src": "api/trades.py",
+      "src": "read_trades.py",
       "use": "@vercel/python"
     }
   ],
   "routes": [
     {
-      "src": "/",
-      "dest": "api/trades.py"
+      "src": "/(.*)",
+      "dest": "read_trades.py"
     }
   ]
 }
